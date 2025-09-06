@@ -54,6 +54,7 @@ const PostList: React.FC = () => {
       const newPost = await postApi.create(postData);
       setPosts([...posts, newPost]);
       setShowForm(false);
+      setEditingPost(null); // Editing post'u temizle
     } catch (err) {
       setError('Post oluşturulurken hata oluştu');
       console.error('Error creating post:', err);
@@ -65,6 +66,7 @@ const PostList: React.FC = () => {
       const updatedPost = await postApi.update(postData);
       setPosts(posts.map(post => post.id === updatedPost.id ? updatedPost : post));
       setEditingPost(null);
+      setShowForm(false); // Form'u kapat
     } catch (err) {
       setError('Post güncellenirken hata oluştu');
       console.error('Error updating post:', err);
@@ -130,26 +132,40 @@ const PostList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="post-list">
-        <div className="loading">Yükleniyor...</div>
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Yükleniyor...</p>
       </div>
     );
   }
 
   return (
     <div className="post-list">
-      <div className="post-list-header">
-        <h1>📝 Post Listesi</h1>
-        <div className="header-actions">
+      <div className="post-list-container">
+        <div className="post-list-header">
           <Link to="/" className="back-link">← Ana Sayfa</Link>
+          <div className="header-title">
+            <div className="header-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h1>Post Listesi</h1>
+          </div>
           <button 
             className="add-button"
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingPost(null);
+              setShowForm(true);
+            }}
           >
             + Yeni Post
           </button>
         </div>
-      </div>
 
       {error && (
         <div className="error-message">
@@ -198,6 +214,12 @@ const PostList: React.FC = () => {
             
             <div className="post-meta">
               <div className="user-info">
+                <div className="profile-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
                 <span className="user-label">Yazar:</span>
                 <span className="user-name">{getUserName(post.userId)}</span>
                 <span className="user-id">(ID: {post.userId})</span>
@@ -214,18 +236,30 @@ const PostList: React.FC = () => {
               <Link 
                 to={`/users`}
                 className="view-user-btn"
+                style={{
+                  background: 'linear-gradient(90deg, #2196F3 0%, #21CBF3 100%)',
+                  color: 'white'
+                }}
               >
                 Kullanıcıyı Görüntüle
               </Link>
               <button 
                 className="edit-btn"
                 onClick={() => handleEditPost(post)}
+                style={{
+                  background: 'linear-gradient(90deg, #9C27B0 0%, #E1BEE7 100%)',
+                  color: 'white'
+                }}
               >
                 Düzenle
               </button>
               <button 
                 className="delete-btn"
                 onClick={() => handleDeletePost(post.id)}
+                style={{
+                  background: 'linear-gradient(90deg, #F44336 0%, #FF5722 100%)',
+                  color: 'white'
+                }}
               >
                 Sil
               </button>
@@ -244,12 +278,16 @@ const PostList: React.FC = () => {
           </p>
           <button 
             className="add-button"
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingPost(null);
+              setShowForm(true);
+            }}
           >
             İlk Postu Ekle
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 };
