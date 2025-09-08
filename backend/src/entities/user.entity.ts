@@ -1,0 +1,25 @@
+export class User {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+
+  constructor(id: number, name: string, username: string, email: string) {
+    this.id = id;
+    this.name = name;
+    this.username = username;
+    this.email = email;
+  }
+}
+
+export class CreateUserDto {
+  name: string;
+  username: string;
+  email: string;
+}
+
+export class UpdateUserDto {
+  name?: string;
+  username?: string;
+  email?: string;
+}
