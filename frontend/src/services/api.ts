@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { User, Post, CreateUserData, CreatePostData, UpdateUserData, UpdatePostData } from '../types';
 
-const API_BASE_URL = 'https://jsonplaceholder.typicode.com';
+const API_BASE_URL = 'http://localhost:3002';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +9,30 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('Making request:', config.method?.toUpperCase(), config.url, config.data);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log('Response received:', response.status, response.data);
+    return response;
+  },
+  (error) => {
+    console.error('Response error:', error.response?.status, error.response?.data, error.message);
+    return Promise.reject(error);
+  }
+);
 
 // User API functions
 export const userApi = {
@@ -32,7 +56,7 @@ export const userApi = {
 
   // Update user
   update: async (userData: UpdateUserData): Promise<User> => {
-    const response = await api.put<User>(`/users/${userData.id}`, userData);
+    const response = await api.patch<User>(`/users/${userData.id}`, userData);
     return response.data;
   },
 
@@ -70,7 +94,7 @@ export const postApi = {
 
   // Update post
   update: async (postData: UpdatePostData): Promise<Post> => {
-    const response = await api.put<Post>(`/posts/${postData.id}`, postData);
+    const response = await api.patch<Post>(`/posts/${postData.id}`, postData);
     return response.data;
   },
 

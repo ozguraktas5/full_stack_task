@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Post, CreatePostData, UpdatePostData, User } from '../types';
 import { postApi, userApi } from '../services/api';
 import PostForm from './PostForm';
-import './PostList.css';
+import SearchBar from './SearchBar';
+import SkeletonCard from './SkeletonCard';
+import Navigation from './Navigation';
+import ToastContainer from './ToastContainer';
+import ConfirmModal from './ConfirmModal';
+import { useToast } from '../hooks/useToast';
+import '../styles/PostList.css';
+import '../styles/components.css';
+import '../styles/navigation.css';
 
 const PostList: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -14,6 +22,10 @@ const PostList: React.FC = () => {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [searchParams] = useSearchParams();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null);
+  const { toasts, showSuccess, showError, removeToast } = useToast();
 
   useEffect(() => {
     const userId = searchParams.get('userId');
@@ -22,6 +34,21 @@ const PostList: React.FC = () => {
     }
     loadData();
   }, [searchParams]);
+
+  // Filter posts based on search term
+  const filteredPosts = useMemo(() => {
+    if (!searchTerm.trim()) return posts;
+    
+    return posts.filter(post => {
+      const user = users.find(u => u.id === post.userId);
+      return (
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.body?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user?.username.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [posts, users, searchTerm]);
 
   const loadData = async () => {
     try {
@@ -54,9 +81,10 @@ const PostList: React.FC = () => {
       const newPost = await postApi.create(postData);
       setPosts([...posts, newPost]);
       setShowForm(false);
-      setEditingPost(null); // Editing post'u temizle
+      setEditingPost(null);
+      showSuccess('Post başarıyla oluşturuldu!');
     } catch (err) {
-      setError('Post oluşturulurken hata oluştu');
+      showError('Post oluşturulurken hata oluştu');
       console.error('Error creating post:', err);
     }
   };
@@ -66,23 +94,38 @@ const PostList: React.FC = () => {
       const updatedPost = await postApi.update(postData);
       setPosts(posts.map(post => post.id === updatedPost.id ? updatedPost : post));
       setEditingPost(null);
-      setShowForm(false); // Form'u kapat
+      setShowForm(false);
+      showSuccess('Post başarıyla güncellendi!');
     } catch (err) {
-      setError('Post güncellenirken hata oluştu');
+      showError('Post güncellenirken hata oluştu');
       console.error('Error updating post:', err);
     }
   };
 
-  const handleDeletePost = async (id: number) => {
-    if (window.confirm('Bu postu silmek istediğinizden emin misiniz?')) {
-      try {
-        await postApi.delete(id);
-        setPosts(posts.filter(post => post.id !== id));
-      } catch (err) {
-        setError('Post silinirken hata oluştu');
-        console.error('Error deleting post:', err);
-      }
+  const handleDeletePost = (post: Post) => {
+    setPostToDelete(post);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeletePost = async () => {
+    if (!postToDelete) return;
+    
+    try {
+      await postApi.delete(postToDelete.id);
+      setPosts(posts.filter(post => post.id !== postToDelete.id));
+      showSuccess('Post başarıyla silindi!');
+    } catch (err) {
+      showError('Post silinirken hata oluştu');
+      console.error('Error deleting post:', err);
+    } finally {
+      setShowDeleteModal(false);
+      setPostToDelete(null);
     }
+  };
+
+  const cancelDeletePost = () => {
+    setShowDeleteModal(false);
+    setPostToDelete(null);
   };
 
   const handleEditPost = (post: Post) => {
@@ -132,9 +175,29 @@ const PostList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner"></div>
-        <p className="loading-text">Yükleniyor...</p>
+      <div className="post-list">
+        <div className="post-list-container">
+          <Navigation />
+          <div className="post-list-header">
+            <div className="header-title">
+              <div className="header-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h1>Post Listesi</h1>
+            </div>
+          </div>
+          <div className="post-grid">
+            {[...Array(6)].map((_, index) => (
+              <SkeletonCard key={index} type="post" />
+            ))}
+          </div>
+        </div>
+        <ToastContainer toasts={toasts} onClose={removeToast} />
       </div>
     );
   }
@@ -142,9 +205,10 @@ const PostList: React.FC = () => {
   return (
     <div className="post-list">
       <div className="post-list-container">
+        <Navigation />
+        
         <div className="post-list-header">
-          <Link to="/" className="back-link">← Ana Sayfa</Link>
-          <div className="header-title">
+          <div className="header-top">
             <div className="header-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -156,15 +220,26 @@ const PostList: React.FC = () => {
             </div>
             <h1>Post Listesi</h1>
           </div>
-          <button 
-            className="add-button"
-            onClick={() => {
-              setEditingPost(null);
-              setShowForm(true);
-            }}
-          >
-            + Yeni Post
-          </button>
+          
+          <div className="header-search">
+            <SearchBar
+              placeholder="Post ara..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
+          </div>
+          
+          <div className="header-actions">
+            <button 
+              className="add-button"
+              onClick={() => {
+                setEditingPost(null);
+                setShowForm(true);
+              }}
+            >
+              + Yeni Post
+            </button>
+          </div>
         </div>
 
       {error && (
@@ -205,7 +280,7 @@ const PostList: React.FC = () => {
       )}
 
       <div className="post-grid">
-        {posts.map(post => (
+        {filteredPosts.map(post => (
           <div key={post.id} className="post-card">
             <div className="post-header">
               <h3>{post.title}</h3>
@@ -255,10 +330,10 @@ const PostList: React.FC = () => {
               </button>
               <button 
                 className="delete-btn"
-                onClick={() => handleDeletePost(post.id)}
-                style={{
-                  background: 'linear-gradient(90deg, #F44336 0%, #FF5722 100%)',
-                  color: 'white'
+                onClick={() => handleDeletePost(post)}
+                style={{ 
+                  background: 'linear-gradient(90deg, #F44336 0%, #FF5722 100%)', 
+                  color: 'white' 
                 }}
               >
                 Sil
@@ -288,6 +363,19 @@ const PostList: React.FC = () => {
         </div>
       )}
       </div>
+      
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Postu Sil"
+        message={`"${postToDelete?.title}" postunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
+        confirmText="Evet, Sil"
+        cancelText="İptal"
+        onConfirm={confirmDeletePost}
+        onCancel={cancelDeletePost}
+        type="danger"
+      />
     </div>
   );
 };
