@@ -3,7 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Post, CreatePostData, UpdatePostData, User } from '../types';
 import { postApi, userApi } from '../services/api';
 import PostForm from './PostForm';
-import SearchBar from './SearchBar';
+import { Input } from './ui/Input';
+import { Button } from './ui/Button';
+import Avatar from './ui/Avatar';
+import { EyeIcon, EditIcon, TrashIcon, PlusIcon } from './ui/Icons';
+import '../styles/ui/Input.css';
+import '../styles/ui/Button.css';
+import '../styles/ui/Avatar.css';
 import SkeletonCard from './SkeletonCard';
 import Navigation from './Navigation';
 import ToastContainer from './ToastContainer';
@@ -25,6 +31,8 @@ const PostList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
   const { toasts, showSuccess, showError, removeToast } = useToast();
 
   useEffect(() => {
@@ -40,15 +48,21 @@ const PostList: React.FC = () => {
     if (!searchTerm.trim()) return posts;
     
     return posts.filter(post => {
-      const user = users.find(u => u.id === post.userId);
-      return (
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.body?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.username.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      // Sadece post title'ında arama yap
+      return post.title.toLowerCase().includes(searchTerm.toLowerCase());
     });
-  }, [posts, users, searchTerm]);
+  }, [posts, searchTerm]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPosts = filteredPosts.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const loadData = async () => {
     try {
@@ -126,6 +140,19 @@ const PostList: React.FC = () => {
   const cancelDeletePost = () => {
     setShowDeleteModal(false);
     setPostToDelete(null);
+  };
+
+  // Pagination functions
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
   };
 
   const handleEditPost = (post: Post) => {
@@ -222,23 +249,27 @@ const PostList: React.FC = () => {
           </div>
           
           <div className="header-search">
-            <SearchBar
+            <Input
+              type="text"
               placeholder="Post ara..."
               value={searchTerm}
-              onChange={setSearchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              variant="search"
+              className="search-input-modern"
             />
           </div>
           
           <div className="header-actions">
-            <button 
-              className="add-button"
+            <Button 
+              className="add-button-custom"
               onClick={() => {
                 setEditingPost(null);
                 setShowForm(true);
               }}
             >
-              + Yeni Post
-            </button>
+              <PlusIcon size={16} />
+              Yeni Post
+            </Button>
           </div>
         </div>
 
@@ -280,68 +311,124 @@ const PostList: React.FC = () => {
       )}
 
       <div className="post-grid">
-        {filteredPosts.map(post => (
-          <div key={post.id} className="post-card">
-            <div className="post-header">
-              <h3>{post.title}</h3>
-              <span className="post-id">#{post.id}</span>
-            </div>
-            
-            <div className="post-meta">
-              <div className="user-info">
-                <div className="profile-icon">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+        {currentPosts.length > 0 ? (
+          currentPosts.map(post => {
+            const user = users.find(u => u.id === post.userId);
+            return (
+              <div key={post.id} className="post-card" data-post-id={post.id}>
+                <div className="post-info">
+                  <div className="post-header">
+                    <Avatar name={user?.name || `User ${post.userId}`} size="md" />
+                    <div className="post-title-section">
+                      <div className="post-title-row">
+                        <h3>
+                          {post.title}
+                        </h3>
+                        <span className="post-id">#{post.id}</span>
+                      </div>
+                      <div className="post-details">
+                        <span className="author-name">{getUserName(post.userId)}</span>
+                        <span className="author-username">@{user?.username || `user${post.userId}`}</span>
+                        <span className="author-email">{user?.email || `user${post.userId}@example.com`}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="user-label">Yazar:</span>
-                <span className="user-name">{getUserName(post.userId)}</span>
-                <span className="user-id">(ID: {post.userId})</span>
-              </div>
-            </div>
 
-            {post.body && (
-              <div className="post-body">
-                <p>{post.body}</p>
-              </div>
-            )}
+                {post.body && (
+                  <div className="post-body">
+                    <p>{post.body}</p>
+                  </div>
+                )}
 
-            <div className="post-actions">
-              <Link 
-                to={`/users`}
-                className="view-user-btn"
-                style={{
-                  background: 'linear-gradient(90deg, #2196F3 0%, #21CBF3 100%)',
-                  color: 'white'
-                }}
-              >
-                Kullanıcıyı Görüntüle
-              </Link>
+                <div className="post-actions">
+                  <Link 
+                    to={`/users`}
+                    className="btn btn-view-user btn-sm"
+                  >
+                    <EyeIcon size={14} />
+                    Kullanıcıyı Gör
+                  </Link>
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    className="btn-edit"
+                    onClick={() => handleEditPost(post)}
+                  >
+                    <EditIcon size={14} />
+                    Düzenle
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeletePost(post)}
+                  >
+                    <TrashIcon size={14} />
+                    Sil
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        ) : searchTerm ? (
+          <div className="no-results">
+            <div className="no-results-content">
+              <div className="no-results-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3>Gösterilecek Post Yok</h3>
+              <p>"{searchTerm}" araması için sonuç bulunamadı.</p>
               <button 
-                className="edit-btn"
-                onClick={() => handleEditPost(post)}
-                style={{
-                  background: 'linear-gradient(90deg, #9C27B0 0%, #E1BEE7 100%)',
-                  color: 'white'
-                }}
+                className="clear-search-btn"
+                onClick={() => setSearchTerm('')}
               >
-                Düzenle
-              </button>
-              <button 
-                className="delete-btn"
-                onClick={() => handleDeletePost(post)}
-                style={{ 
-                  background: 'linear-gradient(90deg, #F44336 0%, #FF5722 100%)', 
-                  color: 'white' 
-                }}
-              >
-                Sil
+                Aramayı Temizle
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        ) : null}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <div className="pagination-info">
+              <span>
+                {startIndex + 1}-{Math.min(endIndex, filteredPosts.length)} / {filteredPosts.length} post
+              </span>
+            </div>
+            
+            <div className="pagination-controls">
+              <button 
+                className="pagination-btn"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                ‹
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button 
+                className="pagination-btn"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        )}
 
       {posts.length === 0 && !loading && (
         <div className="empty-state">
@@ -351,15 +438,16 @@ const PostList: React.FC = () => {
               : 'Henüz post bulunmuyor.'
             }
           </p>
-          <button 
-            className="add-button"
+          <Button 
+            className="add-button-custom"
             onClick={() => {
               setEditingPost(null);
               setShowForm(true);
             }}
           >
+            <PlusIcon size={16} />
             İlk Postu Ekle
-          </button>
+          </Button>
         </div>
       )}
       </div>

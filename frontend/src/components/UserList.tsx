@@ -3,15 +3,21 @@ import { Link } from 'react-router-dom';
 import { User, CreateUserData, UpdateUserData } from '../types';
 import { userApi } from '../services/api';
 import UserForm from './UserForm';
-import SearchBar from './SearchBar';
+import { Input } from './ui/Input';
+import { EyeIcon, EditIcon, TrashIcon, PlusIcon } from './ui/Icons';
 import SkeletonCard from './SkeletonCard';
 import Navigation from './Navigation';
 import ToastContainer from './ToastContainer';
 import ConfirmModal from './ConfirmModal';
 import { useToast } from '../hooks/useToast';
+import { Button } from './ui/Button';
+import Avatar from './ui/Avatar';
 import '../styles/UserList.css';
 import '../styles/components.css';
 import '../styles/navigation.css';
+import '../styles/ui/Button.css';
+import '../styles/ui/Avatar.css';
+import '../styles/ui/Input.css';
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -22,6 +28,8 @@ const UserList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
   const { toasts, showSuccess, showError, removeToast } = useToast();
 
   useEffect(() => {
@@ -32,12 +40,23 @@ const UserList: React.FC = () => {
   const filteredUsers = useMemo(() => {
     if (!searchTerm.trim()) return users;
     
-    return users.filter(user =>
+    return users.filter(user => 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [users, searchTerm]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const loadUsers = async () => {
     try {
@@ -113,6 +132,19 @@ const UserList: React.FC = () => {
     setUserToDelete(null);
   };
 
+  // Pagination functions
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
   const handleEditUser = (user: User) => {
     setEditingUser(user);
     setShowForm(true);
@@ -167,23 +199,27 @@ const UserList: React.FC = () => {
           </div>
           
           <div className="header-search">
-            <SearchBar
+            <Input
+              type="text"
               placeholder="Kullanıcı ara..."
               value={searchTerm}
-              onChange={setSearchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              variant="search"
+              className="search-input-modern"
             />
           </div>
           
           <div className="header-actions">
-            <button 
-              className="add-button"
+            <Button 
+              className="add-button-custom"
               onClick={() => {
                 setEditingUser(null);
                 setShowForm(true);
               }}
             >
-              + Yeni Kullanıcı
-            </button>
+              <PlusIcon size={18} />
+              Yeni Kullanıcı
+            </Button>
           </div>
         </div>
 
@@ -207,63 +243,124 @@ const UserList: React.FC = () => {
       )}
 
         <div className="user-grid">
-          {filteredUsers.map(user => (
-          <div key={user.id} className="user-card">
-            <div className="user-info">
-              <h3>
-                {user.name}
-                <span className="username">@{user.username}</span>
-              </h3>
-              <div className="user-details">
-                <span className="email">{user.email}</span>
-                <span className="user-id">ID: {user.id}</span>
+          {currentUsers.length > 0 ? (
+            currentUsers.map(user => (
+            <div key={user.id} className="user-card" data-user-id={user.id}>
+              <div className="user-info">
+                <div className="user-header">
+                  <Avatar name={user.name} size="md" />
+                  <div className="user-name-section">
+                    <div className="user-name-row">
+                      <h3>
+                        {user.name}
+                        <span className="username">@{user.username}</span>
+                      </h3>
+                      <span className="user-id">#{user.id}</span>
+                    </div>
+                    <div className="user-details">
+                      <span className="email">{user.email}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="user-actions">
+                <Link 
+                  to={`/posts?userId=${user.id}`}
+                  className="btn btn-view-posts btn-sm"
+                >
+                  <EyeIcon size={14} />
+                  Postları Gör
+                </Link>
+                <Button 
+                  variant="default"
+                  size="sm"
+                  className="btn-edit"
+                  onClick={() => handleEditUser(user)}
+                >
+                  <EditIcon size={14} />
+                  Düzenle
+                </Button>
+                <Button 
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteUser(user)}
+                >
+                  <TrashIcon size={14} />
+                  Sil
+                </Button>
               </div>
             </div>
-            <div className="user-actions">
-              <Link 
-                to={`/posts?userId=${user.id}`}
-                className="view-posts-btn"
-                style={{ 
-                  background: 'linear-gradient(90deg, #2196F3 0%, #21CBF3 100%)', 
-                  color: 'white' 
-                }}
-              >
-                Postları Görüntüle
-              </Link>
+          ))
+          ) : searchTerm ? (
+            <div className="no-results">
+              <div className="no-results-content">
+                <div className="no-results-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3>Gösterilecek Kullanıcı Yok</h3>
+                <p>"{searchTerm}" araması için sonuç bulunamadı.</p>
+                <button 
+                  className="clear-search-btn"
+                  onClick={() => setSearchTerm('')}
+                >
+                  Aramayı Temizle
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <div className="pagination-info">
+              <span>
+                {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} / {filteredUsers.length} kullanıcı
+              </span>
+            </div>
+            
+            <div className="pagination-controls">
               <button 
-                className="edit-btn"
-                onClick={() => handleEditUser(user)}
-                style={{ 
-                  background: 'linear-gradient(90deg, #9C27B0 0%, #E1BEE7 100%)', 
-                  color: 'white' 
-                }}
+                className="pagination-btn"
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
               >
-                Düzenle
+                ‹
               </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+              
               <button 
-                className="delete-btn"
-                onClick={() => handleDeleteUser(user)}
-                style={{ 
-                  background: 'linear-gradient(90deg, #F44336 0%, #FF5722 100%)', 
-                  color: 'white' 
-                }}
+                className="pagination-btn"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
               >
-                Sil
+                ›
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        )}
 
         {users.length === 0 && !loading && (
           <div className="empty-state">
             <p>Henüz kullanıcı bulunmuyor.</p>
-            <button 
-              className="add-button"
+            <Button 
+              className="add-button-custom"
               onClick={() => setShowForm(true)}
             >
+              <PlusIcon size={18} />
               İlk Kullanıcıyı Ekle
-            </button>
+            </Button>
           </div>
         )}
       </div>

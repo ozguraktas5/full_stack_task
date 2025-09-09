@@ -12,14 +12,14 @@
 }
 
 .breadcrumb-link {
-  color: var(--primary);
+  color: #4ecdc4;
   text-decoration: none;
   transition: color var(--transition-fast);
   font-weight: var(--font-weight-medium);
 }
 
 .breadcrumb-link:hover {
-  color: var(--primary-dark);
+  color: #45b7d1;
   text-decoration: underline;
 }
 
