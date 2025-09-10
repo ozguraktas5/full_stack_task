@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Post, CreatePostData, UpdatePostData } from '../types';
 import { postApi } from '../services/api';
 

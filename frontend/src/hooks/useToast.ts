@@ -15,6 +15,7 @@ export const useToast = () => {
       message,
       type,
       duration,
+      onClose: () => removeToast(id),
     };
 
     setToasts(prev => [...prev, newToast]);

@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -28,7 +28,7 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
 
@@ -64,7 +64,7 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="error-boundary-message">
               Üzgünüz, beklenmeyen bir hata oluştu. Lütfen sayfayı yenilemeyi deneyin.
             </p>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="error-boundary-details">
                 <summary>Hata Detayları (Geliştirme Modu)</summary>
                 <pre className="error-boundary-stack">

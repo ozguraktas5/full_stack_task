@@ -16,6 +16,7 @@ Command.displayName = CommandPrimitive.displayName;
 
 interface CommandInputProps extends React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> {
   onValueChange?: (value: string) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const CommandInput = React.forwardRef<
@@ -41,10 +42,7 @@ const CommandInput = React.forwardRef<
       ref={ref}
       className={`command-input ${className || ''}`}
       value={value}
-      onChange={(e) => {
-        if (onChange) onChange(e);
-        if (onValueChange) onValueChange(e.target.value);
-      }}
+      onValueChange={onValueChange}
       {...props}
     />
     {value && (

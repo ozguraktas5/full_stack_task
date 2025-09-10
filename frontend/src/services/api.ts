@@ -46,7 +46,7 @@ export const handleApiError = (error: unknown): ApiError => {
         };
       case 422:
         return {
-          message: axiosError.response?.data?.message || 'Girilen veriler geçersiz.',
+          message: (axiosError.response?.data as any)?.message || 'Girilen veriler geçersiz.',
           status: 422,
           code: 'VALIDATION_ERROR',
         };
@@ -58,7 +58,7 @@ export const handleApiError = (error: unknown): ApiError => {
         };
       default:
         return {
-          message: axiosError.response?.data?.message || axiosError.message || 'Bir hata oluştu',
+          message: (axiosError.response?.data as any)?.message || axiosError.message || 'Bir hata oluştu',
           status: axiosError.response?.status,
           code: axiosError.code,
         };

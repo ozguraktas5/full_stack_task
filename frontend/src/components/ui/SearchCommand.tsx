@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from './Command';
+import React, { useState } from 'react';
+import { Command, CommandInput } from './Command';
 import { User } from '../../types';
 import '../../styles/ui/Command.css';
 
@@ -11,29 +11,13 @@ interface SearchCommandProps {
 }
 
 const SearchCommand: React.FC<SearchCommandProps> = ({
-  users,
-  onUserSelect,
   placeholder = "Kullanıcı ara...",
   className = ''
 }) => {
   const [searchValue, setSearchValue] = useState('');
 
-  const filteredUsers = useMemo(() => {
-    if (!searchValue.trim()) return users;
-    
-    return users.filter(user =>
-      user.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchValue.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchValue.toLowerCase())
-    );
-  }, [users, searchValue]);
-
-  const handleUserSelect = (user: User) => {
-    if (onUserSelect) {
-      onUserSelect(user);
-    }
-    setSearchValue('');
-  };
+  // Filtered users and handleUserSelect are not used in current implementation
+  // but kept for future use
 
   return (
     <div className={`search-command ${className}`}>
