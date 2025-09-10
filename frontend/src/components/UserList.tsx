@@ -43,6 +43,7 @@ const UserList: React.FC = () => {
 
   // Filter users based on search term
   const filteredUsers = useMemo(() => {
+    if (!users || !Array.isArray(users)) return [];
     if (!searchTerm.trim()) return users;
     
     return users.filter(user => 

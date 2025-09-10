@@ -60,6 +60,7 @@ const PostList: React.FC = () => {
 
   // Filter posts based on search term
   const filteredPosts = useMemo(() => {
+    if (!posts || !Array.isArray(posts)) return [];
     if (!searchTerm.trim()) return posts;
     
     return posts.filter(post => {
