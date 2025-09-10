@@ -1,15 +1,22 @@
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Post } from './post.entity';
+
+@Entity()
 export class User {
+  @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
   name: string;
+
+  @Column({ unique: true })
   username: string;
+
+  @Column({ unique: true })
   email: string;
 
-  constructor(id: number, name: string, username: string, email: string) {
-    this.id = id;
-    this.name = name;
-    this.username = username;
-    this.email = email;
-  }
+  @OneToMany(() => Post, post => post.user)
+  posts: Post[];
 }
 
 export class CreateUserDto {

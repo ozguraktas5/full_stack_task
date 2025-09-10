@@ -1,15 +1,23 @@
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from './user.entity';
+
+@Entity()
 export class Post {
+  @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
   userId: number;
+
+  @Column()
   title: string;
+
+  @Column({ nullable: true })
   body?: string;
 
-  constructor(id: number, userId: number, title: string, body?: string) {
-    this.id = id;
-    this.userId = userId;
-    this.title = title;
-    this.body = body;
-  }
+  @ManyToOne(() => User, user => user.posts)
+  @JoinColumn({ name: 'userId' })
+  user: User;
 }
 
 export class CreatePostDto {
