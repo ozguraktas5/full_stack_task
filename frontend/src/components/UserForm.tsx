@@ -58,7 +58,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="name">Ad Soyad:</label>
           <input
             type="text"
             id="name"
@@ -66,12 +65,11 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
             value={formData.name}
             onChange={handleChange}
             required
-            placeholder="Ad Soyad girin"
+            placeholder="Ad Soyad"
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="username">Kullanıcı Adı:</label>
           <input
             type="text"
             id="username"
@@ -79,12 +77,11 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
             value={formData.username}
             onChange={handleChange}
             required
-            placeholder="Kullanıcı adı girin"
+            placeholder="Kullanıcı Adı"
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="email">Email:</label>
           <input
             type="email"
             id="email"
@@ -92,7 +89,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
             value={formData.email}
             onChange={handleChange}
             required
-            placeholder="Email adresi girin"
+            placeholder="Email"
           />
         </div>
 

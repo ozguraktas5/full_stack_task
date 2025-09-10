@@ -1,5 +1,80 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { User, Post, CreateUserData, CreatePostData, UpdateUserData, UpdatePostData } from '../types';
+
+// Error types
+export interface ApiError {
+  message: string;
+  status?: number;
+  code?: string;
+}
+
+export const handleApiError = (error: unknown): ApiError => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError;
+    
+    // Handle different HTTP status codes
+    switch (axiosError.response?.status) {
+      case 400:
+        return {
+          message: 'Geçersiz istek. Lütfen girdiğiniz bilgileri kontrol edin.',
+          status: 400,
+          code: 'BAD_REQUEST',
+        };
+      case 401:
+        return {
+          message: 'Yetkisiz erişim. Lütfen giriş yapın.',
+          status: 401,
+          code: 'UNAUTHORIZED',
+        };
+      case 403:
+        return {
+          message: 'Bu işlem için yetkiniz bulunmuyor.',
+          status: 403,
+          code: 'FORBIDDEN',
+        };
+      case 404:
+        return {
+          message: 'Aranan kaynak bulunamadı.',
+          status: 404,
+          code: 'NOT_FOUND',
+        };
+      case 409:
+        return {
+          message: 'Bu kaynak zaten mevcut.',
+          status: 409,
+          code: 'CONFLICT',
+        };
+      case 422:
+        return {
+          message: axiosError.response?.data?.message || 'Girilen veriler geçersiz.',
+          status: 422,
+          code: 'VALIDATION_ERROR',
+        };
+      case 500:
+        return {
+          message: 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.',
+          status: 500,
+          code: 'INTERNAL_SERVER_ERROR',
+        };
+      default:
+        return {
+          message: axiosError.response?.data?.message || axiosError.message || 'Bir hata oluştu',
+          status: axiosError.response?.status,
+          code: axiosError.code,
+        };
+    }
+  }
+  
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+    };
+  }
+  
+  return {
+    message: 'Bilinmeyen bir hata oluştu',
+  };
+};
 
 const API_BASE_URL = 'http://localhost:3002';
 
@@ -10,26 +85,22 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor for debugging
+// Add request interceptor
 api.interceptors.request.use(
   (config) => {
-    console.log('Making request:', config.method?.toUpperCase(), config.url, config.data);
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor for debugging
+// Add response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('Response received:', response.status, response.data);
     return response;
   },
   (error) => {
-    console.error('Response error:', error.response?.status, error.response?.data, error.message);
     return Promise.reject(error);
   }
 );

@@ -1,29 +1,33 @@
+// React imports
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Post, CreatePostData, UpdatePostData, User } from '../types';
-import { postApi, userApi } from '../services/api';
+import { useSearchParams } from 'react-router-dom';
+
+// Types
+import { Post, CreatePostData, UpdatePostData } from '../types';
+
+// Hooks
+import { useToast } from '../hooks/useToast';
+import { usePosts } from '../hooks/usePosts';
+import { useUsers } from '../hooks/useUsers';
+
+// Components
 import PostForm from './PostForm';
-import { Input } from './ui/Input';
-import { Button } from './ui/Button';
-import Avatar from './ui/Avatar';
-import { EyeIcon, EditIcon, TrashIcon, PlusIcon } from './ui/Icons';
-import '../styles/ui/Input.css';
-import '../styles/ui/Button.css';
-import '../styles/ui/Avatar.css';
-import SkeletonCard from './SkeletonCard';
+import PostCard from './PostCard';
 import Navigation from './Navigation';
 import ToastContainer from './ToastContainer';
 import ConfirmModal from './ConfirmModal';
-import { useToast } from '../hooks/useToast';
+import LoadingSpinner from './LoadingSpinner';
+
+// UI Components
+import { Input } from './ui/Input';
+import { Button } from './ui/Button';
+import { PlusIcon } from './ui/Icons';
+
+// Styles
 import '../styles/PostList.css';
-import '../styles/components.css';
 import '../styles/navigation.css';
 
 const PostList: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [searchParams] = useSearchParams();
@@ -33,15 +37,26 @@ const PostList: React.FC = () => {
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
+  
   const { toasts, showSuccess, showError, removeToast } = useToast();
+  const { posts, loading, error, loadAllPosts, loadPostsByUser, createPost, updatePost, deletePost, setError } = usePosts();
+  const { users, loadUsers } = useUsers();
 
   useEffect(() => {
     const userId = searchParams.get('userId');
     if (userId) {
-      setSelectedUserId(parseInt(userId));
+      const userIdNum = parseInt(userId);
+      setSelectedUserId(userIdNum);
+      loadPostsByUser(userIdNum);
+    } else {
+      setSelectedUserId(null);
+      loadAllPosts();
     }
-    loadData();
-  }, [searchParams]);
+  }, [searchParams, loadPostsByUser, loadAllPosts]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   // Filter posts based on search term
   const filteredPosts = useMemo(() => {
@@ -64,55 +79,26 @@ const PostList: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Load users and posts in parallel
-      const [usersData, postsData] = await Promise.all([
-        userApi.getAll(),
-        selectedUserId ? postApi.getByUserId(selectedUserId) : postApi.getAll()
-      ]);
-      
-      setUsers(usersData);
-      setPosts(postsData);
-    } catch (err) {
-      setError('Veriler yüklenirken hata oluştu');
-      console.error('Error loading data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Load users on component mount
 
   const getUserName = (userId: number): string => {
     const user = users.find(u => u.id === userId);
     return user ? user.name : `Kullanıcı ${userId}`;
   };
 
-  const handleCreatePost = async (postData: CreatePostData) => {
+  const handleSubmitPost = async (postData: CreatePostData | UpdatePostData) => {
     try {
-      const newPost = await postApi.create(postData);
-      setPosts([...posts, newPost]);
+      if (editingPost) {
+        await updatePost(postData as UpdatePostData);
+        showSuccess('Post başarıyla güncellendi!');
+      } else {
+        await createPost(postData as CreatePostData);
+        showSuccess('Post başarıyla oluşturuldu!');
+      }
       setShowForm(false);
       setEditingPost(null);
-      showSuccess('Post başarıyla oluşturuldu!');
-    } catch (err) {
-      showError('Post oluşturulurken hata oluştu');
-      console.error('Error creating post:', err);
-    }
-  };
-
-  const handleUpdatePost = async (postData: UpdatePostData) => {
-    try {
-      const updatedPost = await postApi.update(postData);
-      setPosts(posts.map(post => post.id === updatedPost.id ? updatedPost : post));
-      setEditingPost(null);
-      setShowForm(false);
-      showSuccess('Post başarıyla güncellendi!');
-    } catch (err) {
-      showError('Post güncellenirken hata oluştu');
-      console.error('Error updating post:', err);
+    } catch {
+      showError(editingPost ? 'Post güncellenirken hata oluştu' : 'Post oluşturulurken hata oluştu');
     }
   };
 
@@ -125,12 +111,10 @@ const PostList: React.FC = () => {
     if (!postToDelete) return;
     
     try {
-      await postApi.delete(postToDelete.id);
-      setPosts(posts.filter(post => post.id !== postToDelete.id));
+      await deletePost(postToDelete.id);
       showSuccess('Post başarıyla silindi!');
-    } catch (err) {
+    } catch {
       showError('Post silinirken hata oluştu');
-      console.error('Error deleting post:', err);
     } finally {
       setShowDeleteModal(false);
       setPostToDelete(null);
@@ -174,32 +158,6 @@ const PostList: React.FC = () => {
     }
   };
 
-  const loadPostsByUser = async (userId: number) => {
-    try {
-      setLoading(true);
-      const data = await postApi.getByUserId(userId);
-      setPosts(data);
-    } catch (err) {
-      setError('Kullanıcı postları yüklenirken hata oluştu');
-      console.error('Error loading posts by user:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadAllPosts = async () => {
-    try {
-      setLoading(true);
-      const data = await postApi.getAll();
-      setPosts(data);
-    } catch (err) {
-      setError('Postlar yüklenirken hata oluştu');
-      console.error('Error loading all posts:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="post-list">
@@ -218,11 +176,11 @@ const PostList: React.FC = () => {
               <h1>Post Listesi</h1>
             </div>
           </div>
-          <div className="post-grid">
-            {[...Array(6)].map((_, index) => (
-              <SkeletonCard key={index} type="post" />
-            ))}
-          </div>
+          <LoadingSpinner 
+            size="lg" 
+            message="Postlar yükleniyor..." 
+            className="loading-spinner-fullpage"
+          />
         </div>
         <ToastContainer toasts={toasts} onClose={removeToast} />
       </div>
@@ -281,7 +239,7 @@ const PostList: React.FC = () => {
       )}
 
       <div className="filter-section">
-        <label htmlFor="user-filter">Kullanıcıya Göre Filtrele:</label>
+        <label htmlFor="user-filter">Kullanıcıya Göre Filtrele</label>
         <select 
           id="user-filter"
           value={selectedUserId || ''} 
@@ -303,7 +261,7 @@ const PostList: React.FC = () => {
             <PostForm
               post={editingPost}
               users={users}
-              onSubmit={editingPost ? handleUpdatePost : handleCreatePost}
+              onSubmit={handleSubmitPost}
               onCancel={handleCancelForm}
             />
           </div>
@@ -315,59 +273,13 @@ const PostList: React.FC = () => {
           currentPosts.map(post => {
             const user = users.find(u => u.id === post.userId);
             return (
-              <div key={post.id} className="post-card" data-post-id={post.id}>
-                <div className="post-info">
-                  <div className="post-header">
-                    <Avatar name={user?.name || `User ${post.userId}`} size="md" />
-                    <div className="post-title-section">
-                      <div className="post-title-row">
-                        <h3>
-                          {post.title}
-                        </h3>
-                        <span className="post-id">#{post.id}</span>
-                      </div>
-                      <div className="post-details">
-                        <span className="author-name">{getUserName(post.userId)}</span>
-                        <span className="author-username">@{user?.username || `user${post.userId}`}</span>
-                        <span className="author-email">{user?.email || `user${post.userId}@example.com`}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {post.body && (
-                  <div className="post-body">
-                    <p>{post.body}</p>
-                  </div>
-                )}
-
-                <div className="post-actions">
-                  <Link 
-                    to={`/users`}
-                    className="btn btn-view-user btn-sm"
-                  >
-                    <EyeIcon size={14} />
-                    Kullanıcıyı Gör
-                  </Link>
-                  <Button 
-                    variant="default"
-                    size="sm"
-                    className="btn-edit"
-                    onClick={() => handleEditPost(post)}
-                  >
-                    <EditIcon size={14} />
-                    Düzenle
-                  </Button>
-                  <Button 
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeletePost(post)}
-                  >
-                    <TrashIcon size={14} />
-                    Sil
-                  </Button>
-                </div>
-              </div>
+              <PostCard
+                key={post.id}
+                post={post}
+                user={user}
+                onEdit={handleEditPost}
+                onDelete={handleDeletePost}
+              />
             );
           })
         ) : searchTerm ? (

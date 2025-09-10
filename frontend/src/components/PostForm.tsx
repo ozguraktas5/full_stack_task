@@ -60,11 +60,8 @@ const PostForm: React.FC<PostFormProps> = ({ post, users, onSubmit, onCancel }) 
 
   return (
     <div className="post-form">
-      <h2>{post ? 'Post Düzenle' : 'Yeni Post Ekle'}</h2>
-      
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="userId">Kullanıcı:</label>
           <select
             id="userId"
             name="userId"
@@ -73,7 +70,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, users, onSubmit, onCancel }) 
             required
             className="user-select"
           >
-            <option value={0}>Kullanıcı seçin</option>
+            <option value={0} disabled>Kullanıcı Seçin</option>
             {users.map(user => (
               <option key={user.id} value={user.id}>
                 {user.name} (@{user.username})
@@ -83,7 +80,6 @@ const PostForm: React.FC<PostFormProps> = ({ post, users, onSubmit, onCancel }) 
         </div>
 
         <div className="form-group">
-          <label htmlFor="title">Başlık:</label>
           <input
             type="text"
             id="title"
@@ -91,18 +87,17 @@ const PostForm: React.FC<PostFormProps> = ({ post, users, onSubmit, onCancel }) 
             value={formData.title}
             onChange={handleChange}
             required
-            placeholder="Post başlığını girin"
+            placeholder="Post Başlığı"
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="body">İçerik (Opsiyonel):</label>
           <textarea
             id="body"
             name="body"
             value={formData.body}
             onChange={handleChange}
-            placeholder="Post içeriğini girin"
+            placeholder="Post İçeriği (Opsiyonel)"
             rows={4}
             className="post-textarea"
           />

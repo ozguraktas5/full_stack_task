@@ -53,7 +53,7 @@ const CommandInput = React.forwardRef<
         className="command-clear"
         onClick={() => {
           if (onChange) {
-            onChange({ target: { value: '' } } as any);
+            onChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>);
           }
           if (onValueChange) {
             onValueChange('');

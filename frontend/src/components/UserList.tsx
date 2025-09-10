@@ -1,28 +1,31 @@
+// React imports
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+
+// Types
 import { User, CreateUserData, UpdateUserData } from '../types';
-import { userApi } from '../services/api';
+
+// Hooks
+import { useToast } from '../hooks/useToast';
+import { useUsers } from '../hooks/useUsers';
+
+// Components
 import UserForm from './UserForm';
-import { Input } from './ui/Input';
-import { EyeIcon, EditIcon, TrashIcon, PlusIcon } from './ui/Icons';
-import SkeletonCard from './SkeletonCard';
+import UserCard from './UserCard';
 import Navigation from './Navigation';
 import ToastContainer from './ToastContainer';
 import ConfirmModal from './ConfirmModal';
-import { useToast } from '../hooks/useToast';
+import LoadingSpinner from './LoadingSpinner';
+
+// UI Components
+import { Input } from './ui/Input';
 import { Button } from './ui/Button';
-import Avatar from './ui/Avatar';
+import { PlusIcon } from './ui/Icons';
+
+// Styles
 import '../styles/UserList.css';
-import '../styles/components.css';
 import '../styles/navigation.css';
-import '../styles/ui/Button.css';
-import '../styles/ui/Avatar.css';
-import '../styles/ui/Input.css';
 
 const UserList: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +33,9 @@ const UserList: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
+  
   const { toasts, showSuccess, showError, removeToast } = useToast();
+  const { users, loading, error, loadUsers, createUser, updateUser, deleteUser, setError } = useUsers();
 
   useEffect(() => {
     loadUsers();
@@ -58,43 +63,26 @@ const UserList: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await userApi.getAll();
-      setUsers(data);
-    } catch (err) {
-      setError('Kullanıcılar yüklenirken hata oluştu');
-      console.error('Error loading users:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateUser = async (userData: CreateUserData) => {
     try {
-      const newUser = await userApi.create(userData);
-      setUsers([...users, newUser]);
+      await createUser(userData);
       setShowForm(false);
       setEditingUser(null);
       showSuccess('Kullanıcı başarıyla oluşturuldu!');
-    } catch (err) {
+    } catch {
       showError('Kullanıcı oluşturulurken hata oluştu');
-      console.error('Error creating user:', err);
     }
   };
 
   const handleUpdateUser = async (userData: UpdateUserData) => {
     try {
-      const updatedUser = await userApi.update(userData);
-      setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
+      await updateUser(userData);
       setEditingUser(null);
       setShowForm(false);
       showSuccess('Kullanıcı başarıyla güncellendi!');
-    } catch (err) {
+    } catch {
       showError('Kullanıcı güncellenirken hata oluştu');
-      console.error('Error updating user:', err);
     }
   };
 
@@ -115,12 +103,10 @@ const UserList: React.FC = () => {
     if (!userToDelete) return;
     
     try {
-      await userApi.delete(userToDelete.id);
-      setUsers(users.filter(user => user.id !== userToDelete.id));
+      await deleteUser(userToDelete.id);
       showSuccess('Kullanıcı başarıyla silindi!');
-    } catch (err) {
+    } catch {
       showError('Kullanıcı silinirken hata oluştu');
-      console.error('Error deleting user:', err);
     } finally {
       setShowDeleteModal(false);
       setUserToDelete(null);
@@ -171,11 +157,11 @@ const UserList: React.FC = () => {
               <h1>Kullanıcı Listesi</h1>
             </div>
           </div>
-          <div className="user-grid">
-            {[...Array(6)].map((_, index) => (
-              <SkeletonCard key={index} type="user" />
-            ))}
-          </div>
+          <LoadingSpinner 
+            size="lg" 
+            message="Kullanıcılar yükleniyor..." 
+            className="loading-spinner-fullpage"
+          />
         </div>
         <ToastContainer toasts={toasts} onClose={removeToast} />
       </div>
@@ -245,52 +231,13 @@ const UserList: React.FC = () => {
         <div className="user-grid">
           {currentUsers.length > 0 ? (
             currentUsers.map(user => (
-            <div key={user.id} className="user-card" data-user-id={user.id}>
-              <div className="user-info">
-                <div className="user-header">
-                  <Avatar name={user.name} size="md" />
-                  <div className="user-name-section">
-                    <div className="user-name-row">
-                      <h3>
-                        {user.name}
-                        <span className="username">@{user.username}</span>
-                      </h3>
-                      <span className="user-id">#{user.id}</span>
-                    </div>
-                    <div className="user-details">
-                      <span className="email">{user.email}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="user-actions">
-                <Link 
-                  to={`/posts?userId=${user.id}`}
-                  className="btn btn-view-posts btn-sm"
-                >
-                  <EyeIcon size={14} />
-                  Postları Gör
-                </Link>
-                <Button 
-                  variant="default"
-                  size="sm"
-                  className="btn-edit"
-                  onClick={() => handleEditUser(user)}
-                >
-                  <EditIcon size={14} />
-                  Düzenle
-                </Button>
-                <Button 
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteUser(user)}
-                >
-                  <TrashIcon size={14} />
-                  Sil
-                </Button>
-              </div>
-            </div>
-          ))
+              <UserCard
+                key={user.id}
+                user={user}
+                onEdit={handleEditUser}
+                onDelete={handleDeleteUser}
+              />
+            ))
           ) : searchTerm ? (
             <div className="no-results">
               <div className="no-results-content">
