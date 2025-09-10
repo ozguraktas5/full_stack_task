@@ -17,7 +17,7 @@ import { Post } from './entities/post.entity';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [User, Post],
-      synchronize: process.env.NODE_ENV !== 'production', // Only in development
+      synchronize: true,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     UsersModule, 
