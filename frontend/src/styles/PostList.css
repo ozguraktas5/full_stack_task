@@ -49,6 +49,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
+  min-height: 80px;
 }
 
 .header-top {
@@ -64,6 +65,7 @@
   justify-content: center;
   flex: 1;
   max-width: 400px;
+  min-width: 250px;
 }
 
 .header-actions {
@@ -128,12 +130,17 @@
   background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
+  padding: 14px 24px;
   border-radius: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   transform: none !important;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .add-button:hover {
@@ -404,6 +411,7 @@
   width: 100%;
   flex-shrink: 0;
   padding-top: 20px;
+  padding-bottom: 10px;
   align-items: flex-end;
 }
 
@@ -413,7 +421,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 12px 16px;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -426,8 +434,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 36px;
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .post-actions .btn-view-user {
@@ -709,18 +716,56 @@
 }
 
 @media (max-width: 768px) {
+  .post-list {
+    padding: 20px 10px;
+  }
+  
   .post-list-header {
     flex-direction: column;
     align-items: stretch;
+    padding: 25px 20px;
+    gap: 20px;
+    min-height: auto;
+  }
+  
+  .header-title {
+    order: 1;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  
+  .header-title h1 {
+    font-size: 1.8rem;
+  }
+  
+  .header-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .header-search {
+    order: 2;
+    max-width: none;
+    min-width: auto;
+    margin: 10px 0;
   }
   
   .header-actions {
-    justify-content: space-between;
+    order: 3;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  
+  .add-button {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
   }
   
   .filter-section {
     flex-direction: column;
     align-items: stretch;
+    padding: 20px;
   }
   
   .user-filter {
@@ -729,36 +774,12 @@
   
   .post-grid {
     grid-template-columns: 1fr;
-    max-width: 100%;
-    margin: 20px 10px;
+    gap: 20px;
   }
   
   .post-card {
-    height: auto;
-    min-height: 360px;
-    padding: 20px;
-  }
-  
-  .post-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .post-title-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .post-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .post-actions .btn {
-    flex: none;
-    min-width: auto;
+    height: 400px;
+    min-height: 400px;
   }
   
   .form-actions {
@@ -780,5 +801,87 @@
     min-width: 35px;
     height: 35px;
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) and (min-width: 481px) {
+  .post-card {
+    height: 420px;
+    min-height: 420px;
+    padding: 25px 20px;
+  }
+  
+  .post-actions {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    padding-bottom: 15px;
+  }
+  
+  .post-actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+    padding: 13px 15px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-list {
+    padding: 15px 5px;
+  }
+  
+  .post-list-header {
+    padding: 20px 15px;
+  }
+  
+  .header-title h1 {
+    font-size: 1.6rem;
+  }
+  
+  .header-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .post-card {
+    padding: 20px 15px;
+    height: 440px;
+    min-height: 440px;
+  }
+  
+  .post-header {
+    gap: 10px;
+  }
+  
+  .post-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .post-header h3 {
+    font-size: 1.2rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .post-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    padding-bottom: 10px;
+  }
+  
+  .post-actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 14px;
+    font-size: 13px;
   }
 }

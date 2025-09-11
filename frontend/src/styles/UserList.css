@@ -49,6 +49,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
+  min-height: 80px;
 }
 
 .header-top {
@@ -64,6 +65,7 @@
   justify-content: center;
   flex: 1;
   max-width: 400px;
+  min-width: 250px;
 }
 
 .header-actions {
@@ -129,7 +131,7 @@
   background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
+  padding: 14px 24px;
   border-radius: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -137,6 +139,11 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   transform: none !important;
   box-shadow: 0 2px 4px rgba(78, 205, 196, 0.3);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .add-button:hover {
@@ -333,6 +340,7 @@
   position: relative;
   z-index: 2;
   padding-top: 25px;
+  padding-bottom: 10px;
 }
 
 /* Updated button styles for user actions */
@@ -346,6 +354,10 @@
   gap: 6px;
   font-weight: 500;
   text-decoration: none;
+  min-height: 44px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .user-actions .btn-view-posts {
@@ -668,11 +680,13 @@
     align-items: stretch;
     padding: 25px 20px;
     gap: 20px;
+    min-height: auto;
   }
   
   .header-title {
-    order: 2;
+    order: 1;
     justify-content: center;
+    margin-bottom: 10px;
   }
   
   .header-title h1 {
@@ -684,37 +698,28 @@
     height: 40px;
   }
   
-  .back-link {
-    order: 1;
-    align-self: flex-start;
+  .header-search {
+    order: 2;
+    max-width: none;
+    min-width: auto;
+    margin: 10px 0;
+  }
+  
+  .header-actions {
+    order: 3;
+    justify-content: center;
+    margin-top: 10px;
   }
   
   .add-button {
-    order: 3;
-    align-self: flex-end;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
   }
   
   .user-grid {
     grid-template-columns: 1fr;
     gap: 20px;
-  }
-  
-  .user-card {
-    padding: 25px 20px;
-  }
-  
-  .user-header {
-    gap: 12px;
-  }
-  
-  .user-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .user-actions .btn {
-    width: 100%;
-    justify-content: center;
   }
   
   .form-actions {
@@ -739,6 +744,29 @@
   }
 }
 
+@media (max-width: 768px) and (min-width: 481px) {
+  .user-card {
+    height: 340px;
+    min-height: 340px;
+  }
+  
+  .user-actions {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    padding-bottom: 15px;
+  }
+  
+  .user-actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+    padding: 13px 15px;
+    font-size: 14px;
+  }
+}
+
 @media (max-width: 480px) {
   .user-list {
     padding: 15px 5px;
@@ -759,6 +787,8 @@
   
   .user-card {
     padding: 20px 15px;
+    height: 360px;
+    min-height: 360px;
   }
   
   .user-header {
@@ -791,5 +821,21 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
+  }
+  
+  .user-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    padding-bottom: 10px;
+  }
+  
+  .user-actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 14px;
+    font-size: 13px;
   }
 }

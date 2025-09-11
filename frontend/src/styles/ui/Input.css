@@ -47,7 +47,7 @@
 }
 
 .input-search {
-  height: 44px;
+  height: 48px;
   padding: 0 12px;
 }
 
@@ -155,7 +155,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .input-search {
-    height: 40px;
+    height: 44px;
     padding: 0 12px 0 40px;
   }
   
