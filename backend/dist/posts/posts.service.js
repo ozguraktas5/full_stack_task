@@ -5,66 +5,69 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostsService = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const post_entity_1 = require("../entities/post.entity");
 let PostsService = class PostsService {
-    posts = [
-        new post_entity_1.Post(1, 1, 'sunt aut facere repellat provident occaecati excepturi optio reprehenderit', 'quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto'),
-        new post_entity_1.Post(2, 1, 'qui est esse', 'est rerum tempore vitae\nsequi sint nihil reprehenderit dolor beatae ea dolores neque\nfugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis\nqui aperiam non debitis possimus qui neque nisi nulla'),
-        new post_entity_1.Post(3, 1, 'ea molestias quasi exercitationem repellat qui ipsa sit aut', 'et iusto sed quo iure\nvoluptatem occaecati omnis eligendi aut ad\nvoluptatem doloribus vel accusantium quis pariatur\nmolestiae porro eius odio et labore et velit aut'),
-        new post_entity_1.Post(4, 1, 'eum et est occaecati', 'ullam et saepe reiciendis voluptatem adipisci\nsit amet autem assumenda provident rerum culpa\nquis hic commodi nesciunt rem tenetur doloremque ipsam iure\nquis sunt voluptatem rerum illo velit'),
-        new post_entity_1.Post(5, 1, 'nesciunt quas odio', 'repudiandae veniam quaerat sunt sed\nalias aut fugiat sit autem sed est\nvoluptatem omnis possimus esse voluptatibus quis\nest aut tenetur dolor neque'),
-        new post_entity_1.Post(6, 2, 'dolorem eum magni eos aperiam quia', 'ut aspernatur corporis harum nihil quis provident sequi\nmollitia nobis aliquid molestiae\nperspiciatis et ea nemo ab reprehenderit accusantium quas\nvoluptate dolores velit et doloremque molestiae'),
-        new post_entity_1.Post(7, 2, 'magnam facilis autem', 'dolore placeat quibusdam ea quo vitae\nmagni quis enim qui quis quo nemo aut saepe\nquidem repellat excepturi ut quia\nsunt ut sequi eos ea sed quas'),
-        new post_entity_1.Post(8, 2, 'dolorem dolore est ipsam', 'dignissimos aperiam dolorem qui eum\nfacilis quibusdam animi sint suscipit qui sint possimus cum\nquaerat magni maiores excepturi\nipsam ut commodi dolor voluptatum modi aut vitae'),
-        new post_entity_1.Post(9, 2, 'nesciunt iure omnis dolorem tempora et accusantium', 'consectetur animi nesciunt iure dolore\nenim quia ad\nveniam autem ut quam aut nobis\net est aut quod aut provident voluptas autem voluptas'),
-        new post_entity_1.Post(10, 2, 'optio molestias id quia eum', 'quo et expedita modi cum officia vel magni\ndoloribus qui repudiandae\nvero nisi sit\nquos veniam quod sed accusamus veritatis error'),
-    ];
-    nextId = 11;
-    findAll() {
-        return this.posts;
+    postsRepository;
+    constructor(postsRepository) {
+        this.postsRepository = postsRepository;
     }
-    findOne(id) {
-        const post = this.posts.find((post) => post.id === id);
+    async findAll() {
+        const posts = await this.postsRepository.find();
+        if (posts.length === 0) {
+            const testPosts = [
+                { userId: 1, title: 'İlk Post', body: 'Bu ilk test postudur.' },
+                { userId: 1, title: 'React Hakkında', body: 'React öğrenmek çok eğlenceli!' },
+                { userId: 2, title: 'NestJS Backend', body: 'NestJS ile backend geliştirme.' },
+                { userId: 2, title: 'TypeScript', body: 'TypeScript kullanımı ve avantajları.' },
+                { userId: 3, title: 'PostgreSQL', body: 'Veritabanı yönetimi ve sorgular.' },
+            ];
+            for (const postData of testPosts) {
+                const post = this.postsRepository.create(postData);
+                await this.postsRepository.save(post);
+            }
+            return this.postsRepository.find();
+        }
+        return posts;
+    }
+    async findOne(id) {
+        const post = await this.postsRepository.findOne({ where: { id } });
         if (!post) {
             throw new common_1.NotFoundException(`Post with ID ${id} not found`);
         }
         return post;
     }
-    findByUserId(userId) {
-        return this.posts.filter((post) => post.userId === userId);
+    async findByUserId(userId) {
+        return this.postsRepository.find({ where: { userId } });
     }
-    create(createPostDto) {
-        const newPost = new post_entity_1.Post(this.nextId++, createPostDto.userId, createPostDto.title, createPostDto.body);
-        this.posts.push(newPost);
-        return newPost;
+    async create(createPostDto) {
+        const post = this.postsRepository.create(createPostDto);
+        return this.postsRepository.save(post);
     }
-    update(id, updatePostDto) {
-        const postIndex = this.posts.findIndex((post) => post.id === id);
-        if (postIndex === -1) {
-            throw new common_1.NotFoundException(`Post with ID ${id} not found`);
-        }
-        const post = this.posts[postIndex];
-        if (updatePostDto.userId !== undefined)
-            post.userId = updatePostDto.userId;
-        if (updatePostDto.title !== undefined)
-            post.title = updatePostDto.title;
-        if (updatePostDto.body !== undefined)
-            post.body = updatePostDto.body;
-        return post;
+    async update(id, updatePostDto) {
+        const post = await this.findOne(id);
+        Object.assign(post, updatePostDto);
+        return this.postsRepository.save(post);
     }
-    remove(id) {
-        const postIndex = this.posts.findIndex((post) => post.id === id);
-        if (postIndex === -1) {
-            throw new common_1.NotFoundException(`Post with ID ${id} not found`);
-        }
-        this.posts.splice(postIndex, 1);
+    async remove(id) {
+        const post = await this.findOne(id);
+        await this.postsRepository.remove(post);
     }
 };
 exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(post_entity_1.Post)),
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

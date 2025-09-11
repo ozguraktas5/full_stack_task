@@ -1,9 +1,10 @@
+import { Post } from './post.entity';
 export declare class User {
     id: number;
     name: string;
     username: string;
     email: string;
-    constructor(id: number, name: string, username: string, email: string);
+    posts: Post[];
 }
 export declare class CreateUserDto {
     name: string;

@@ -9,9 +9,11 @@ async function bootstrap() {
             'http://localhost:5173',
             'http://localhost:3000',
             'http://localhost:3002',
-        ],
+            process.env.FRONTEND_URL,
+        ].filter(Boolean),
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
     });
     await app.listen(process.env.PORT ?? 3002);
     console.log(`🚀 Backend server running on http://localhost:${process.env.PORT ?? 3002}`);

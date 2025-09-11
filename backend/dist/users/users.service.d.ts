@@ -1,10 +1,11 @@
+import { Repository } from 'typeorm';
 import { User, CreateUserDto, UpdateUserDto } from '../entities/user.entity';
 export declare class UsersService {
-    private users;
-    private nextId;
-    findAll(): User[];
-    findOne(id: number): User;
-    create(createUserDto: CreateUserDto): User;
-    update(id: number, updateUserDto: UpdateUserDto): User;
-    remove(id: number): void;
+    private usersRepository;
+    constructor(usersRepository: Repository<User>);
+    findAll(): Promise<User[]>;
+    findOne(id: number): Promise<User>;
+    create(createUserDto: CreateUserDto): Promise<User>;
+    update(id: number, updateUserDto: UpdateUserDto): Promise<User>;
+    remove(id: number): Promise<void>;
 }

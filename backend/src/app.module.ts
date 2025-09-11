@@ -14,11 +14,10 @@ import { Post } from './entities/post.entity';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
+      type: 'sqlite',
+      database: 'database.sqlite',
       entities: [User, Post],
       synchronize: true,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     UsersModule, 
     PostsModule
