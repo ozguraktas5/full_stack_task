@@ -23,22 +23,7 @@ let PostsService = class PostsService {
         this.postsRepository = postsRepository;
     }
     async findAll() {
-        const posts = await this.postsRepository.find();
-        if (posts.length === 0) {
-            const testPosts = [
-                { userId: 1, title: 'İlk Post', body: 'Bu ilk test postudur.' },
-                { userId: 1, title: 'React Hakkında', body: 'React öğrenmek çok eğlenceli!' },
-                { userId: 2, title: 'NestJS Backend', body: 'NestJS ile backend geliştirme.' },
-                { userId: 2, title: 'TypeScript', body: 'TypeScript kullanımı ve avantajları.' },
-                { userId: 3, title: 'PostgreSQL', body: 'Veritabanı yönetimi ve sorgular.' },
-            ];
-            for (const postData of testPosts) {
-                const post = this.postsRepository.create(postData);
-                await this.postsRepository.save(post);
-            }
-            return this.postsRepository.find();
-        }
-        return posts;
+        return this.postsRepository.find();
     }
     async findOne(id) {
         const post = await this.postsRepository.findOne({ where: { id } });

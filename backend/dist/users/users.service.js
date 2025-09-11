@@ -23,20 +23,7 @@ let UsersService = class UsersService {
         this.usersRepository = usersRepository;
     }
     async findAll() {
-        const users = await this.usersRepository.find();
-        if (users.length === 0) {
-            const testUsers = [
-                { name: 'Ahmet Yılmaz', username: 'ahmet', email: 'ahmet@example.com' },
-                { name: 'Ayşe Demir', username: 'ayse', email: 'ayse@example.com' },
-                { name: 'Mehmet Kaya', username: 'mehmet', email: 'mehmet@example.com' },
-            ];
-            for (const userData of testUsers) {
-                const user = this.usersRepository.create(userData);
-                await this.usersRepository.save(user);
-            }
-            return this.usersRepository.find();
-        }
-        return users;
+        return this.usersRepository.find();
     }
     async findOne(id) {
         const user = await this.usersRepository.findOne({ where: { id } });
