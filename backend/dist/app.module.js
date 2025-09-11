@@ -26,10 +26,11 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
             }),
             typeorm_1.TypeOrmModule.forRoot({
-                type: 'sqlite',
-                database: 'database.sqlite',
+                type: 'postgres',
+                url: process.env.DATABASE_URL,
                 entities: [user_entity_1.User, post_entity_1.Post],
                 synchronize: true,
+                ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
             }),
             users_module_1.UsersModule,
             posts_module_1.PostsModule
